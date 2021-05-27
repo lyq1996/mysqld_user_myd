@@ -13,7 +13,7 @@ def pad(data_len):
     byte_len = data_len >> 2
     return (byte_len + ((data_len - (byte_len << 2)) & 1)) << 2
 
-def read_record(content, idx, header_len, data_len_start, data_len_end, next_pos_start=-1, unused_len_pos=0):
+def read_record(content, idx, header_len, data_len_start, data_len_end, next_record_addr, next_pos_start=-1, unused_len_pos=0):
     rec_type = content[idx]
     data_len = read_len(content, idx + data_len_start, idx + data_len_end + 1)
     if data_len > len(content):
@@ -30,12 +30,13 @@ def read_record(content, idx, header_len, data_len_start, data_len_end, next_pos
         block_len += 4
     else:
         block_len = all_len
- 
+
+    next_record = {}
     if next_pos_start > 0:
+        next_record_addr.append(idx)
         next_pos = read_len(content, idx + next_pos_start, idx + next_pos_start + 8)
-        next_record = dispatch_record(content, next_pos)
-    else:
-        next_record = {}
+        if not next_pos in next_record_addr:
+            next_record = dispatch_record(content, next_pos, next_record_addr)
         
     return dict(
         rec_type=rec_type,
@@ -46,40 +47,40 @@ def read_record(content, idx, header_len, data_len_start, data_len_end, next_pos
     )
 
 
-def dispatch_record(content, idx):
+def dispatch_record(content, idx, next_record_addr = []):
     record =  {}
     if idx > len(content) - 1:
         # 越界 直接返回
         return record    
     rec_type = content[idx]
     if rec_type == 0:
-        record = read_record(content, idx, 20, 1, 3)
+        record = read_record(content, idx, 20, 1, 3, next_record_addr)
     elif rec_type == 1:
-        record = read_record(content, idx, 3, 1, 2)
+        record = read_record(content, idx, 3, 1, 2, next_record_addr)
     elif rec_type == 2:
-        record = read_record(content, idx, 4, 1, 3)
+        record = read_record(content, idx, 4, 1, 3, next_record_addr)
     elif rec_type == 3:
-        record = read_record(content, idx, 4, 1, 2, unused_len_pos=3)
+        record = read_record(content, idx, 4, 1, 2, next_record_addr, unused_len_pos=3)
     elif rec_type == 4:
-        record = read_record(content, idx, 5, 1, 3, unused_len_pos=4)
+        record = read_record(content, idx, 5, 1, 3, next_record_addr, unused_len_pos=4)
     elif rec_type == 5:
-        record = read_record(content, idx, 13, 3, 4, 5)
+        record = read_record(content, idx, 13, 3, 4, 5, next_record_addr)
     elif rec_type == 6:
-        record = read_record(content, idx, 15, 4, 6, 7)
+        record = read_record(content, idx, 15, 4, 6, 7, next_record_addr)
     elif rec_type == 7:
-        record = read_record(content, idx, 3, 1, 2)
+        record = read_record(content, idx, 3, 1, 2, next_record_addr)
     elif rec_type == 8:
-        record = read_record(content, idx, 4, 1, 3)
+        record = read_record(content, idx, 4, 1, 3, next_record_addr)
     elif rec_type == 9:
-        record = read_record(content, idx, 4, 1, 2, unused_len_pos=3)
+        record = read_record(content, idx, 4, 1, 2, next_record_addr, unused_len_pos=3)
     elif rec_type == 10:
-        record = read_record(content, idx, 5, 1, 3, unused_len_pos=4)
+        record = read_record(content, idx, 5, 1, 3, next_record_addr, unused_len_pos=4)
     elif rec_type == 11:
-        record = read_record(content, idx, 11, 1, 2, 3)
+        record = read_record(content, idx, 11, 1, 2, 3, next_record_addr)
     elif rec_type == 12:
-        record = read_record(content, idx, 12, 1, 3, 4)
+        record = read_record(content, idx, 12, 1, 3, 4, next_record_addr)
     elif rec_type == 13:
-        record = read_record(content, idx, 16, 5, 7, 8)
+        record = read_record(content, idx, 16, 5, 7, 8, next_record_addr)
     return record
 
 
