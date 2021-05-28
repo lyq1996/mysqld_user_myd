@@ -32,7 +32,7 @@ def read_record(content, idx, header_len, data_len_start, data_len_end, next_rec
         block_len = all_len
 
     next_record = {}
-    if next_pos_start > 0:
+    if next_pos_start > 0: 
         next_record_addr.append(idx)
         next_pos = read_len(content, idx + next_pos_start, idx + next_pos_start + 8)
         if not next_pos in next_record_addr:
@@ -47,7 +47,7 @@ def read_record(content, idx, header_len, data_len_start, data_len_end, next_rec
     )
 
 
-def dispatch_record(content, idx, next_record_addr = []):
+def dispatch_record(content, idx, next_record_addr):
     record =  {}
     if idx > len(content) - 1:
         # 越界 直接返回
@@ -64,9 +64,9 @@ def dispatch_record(content, idx, next_record_addr = []):
     elif rec_type == 4:
         record = read_record(content, idx, 5, 1, 3, next_record_addr, unused_len_pos=4)
     elif rec_type == 5:
-        record = read_record(content, idx, 13, 3, 4, 5, next_record_addr)
+        record = read_record(content, idx, 13, 3, 4, next_record_addr, 5)
     elif rec_type == 6:
-        record = read_record(content, idx, 15, 4, 6, 7, next_record_addr)
+        record = read_record(content, idx, 15, 4, 6, next_record_addr, 7)
     elif rec_type == 7:
         record = read_record(content, idx, 3, 1, 2, next_record_addr)
     elif rec_type == 8:
@@ -76,11 +76,11 @@ def dispatch_record(content, idx, next_record_addr = []):
     elif rec_type == 10:
         record = read_record(content, idx, 5, 1, 3, next_record_addr, unused_len_pos=4)
     elif rec_type == 11:
-        record = read_record(content, idx, 11, 1, 2, 3, next_record_addr)
+        record = read_record(content, idx, 11, 1, 2, next_record_addr, 3)
     elif rec_type == 12:
-        record = read_record(content, idx, 12, 1, 3, 4, next_record_addr)
+        record = read_record(content, idx, 12, 1, 3, next_record_addr, 4)
     elif rec_type == 13:
-        record = read_record(content, idx, 16, 5, 7, 8, next_record_addr)
+        record = read_record(content, idx, 16, 5, 7, next_record_addr, 8)
     return record
 
 
@@ -122,7 +122,7 @@ def read_records(filename, version="5.5"):
         content_len = len(content)
         idx = 0
         while idx < content_len:
-            record = dispatch_record(content, idx)
+            record = dispatch_record(content, idx, [])
             if not record:
                 # record返回空值 跳出
                 break
